@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="./cycleImage.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <style>
+        .canvas-cycle {
+            width: 360px;
+            height: 233px;
+            object-fit: contain;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        .img {
+            width: 360px;
+            height: 233px;
+            object-fit: contain;
+        }
+
+        .show {
+            display: none;
+        }
+
+        .tips {
+            background-color: gray;
+            display: flex;
+
+        }
+
+        span {
+            color: rebeccapurple;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="tips">
+        <span>思路1:通过修改图片css的 display: none;</span>
+    </div>
+    <div id="app">
+        <div @touchstart="touchstart" @touchmove="touchmove">
+            <img :src="item" alt :class="{'img': true,'show':curDeg!=index}" v-for="(item, index) in arr"
+                :key="index" />
+        </div>
+    </div>
+    <div class="tips"><span>思路2:canvas,采用二维数组,支持图片叠加绘制, 优先加载当前图片, 且支持设置最大并发数量</span></div>
+    <div id="cycle-image-wrap"></div>
+</body>
+
+<script>
+    let data = ["https://panovr.autoimg.cn/pano/g6/M07/2C/B1/1000x0_autohomecar__ChsE12E_SHOALbXhAATc0vmzNeI287.png.webp",
+        "https://panovr.autoimg.cn/pano/g6/M0E/2D/B2/1000x0_autohomecar__ChwEmGE_SHSAWc_kAARbyz3a-50920.png.webp",
+        "https://panovr.autoimg.cn/pano/g6/M05/2C/B1/1000x0_autohomecar__ChsE12E_SHSAFu2oAAP4Cb5IjhU181.png.webp",
+        "https://panovr.autoimg.cn/pano/g6/M11/2C/B1/1000x0_autohomecar__ChsE12E_SHSADj_zAANSZny9qlA450.png.webp",
+        "https://panovr.autoimg.cn/pano/g6/M0F/2C/B1/1000x0_autohomecar__ChsE12E_SHSAIWJKAAQfVzD19NU609.png.webp",
+        "https://panovr.autoimg.cn/pano/g6/M0C/2D/B2/1000x0_autohomecar__ChwEmGE_SHWAf8f7AASq0aVZaSA120.png.webp",
+        "https://panovr.autoimg.cn/pano/g6/M0F/2D/B2/1000x0_autohomecar__ChwEmGE_SHWABqpzAAUXl53NiKI509.png.webp",
+        "https://panovr.autoimg.cn/pano/g6/M03/2D/B2/1000x0_autohomecar__ChwEmGE_SHaANScKAAVlUPLS9-4949.png.webp",
+        "https://panovr.autoimg.cn/pano/g6/M05/2D/B2/1000x0_autohomecar__ChwEmGE_SHaARZYOAAWaYIrS9ig201.png.webp",
+        "https://panovr.autoimg.cn/pano/g6/M01/26/7D/1000x0_autohomecar__Chxkj2E_SHeAG1NiAAXQyDkN2X8955.png.webp",
+        "https://panovr.autoimg.cn/pano/g6/M06/2C/B2/1000x0_autohomecar__ChsE12E_SHeAc4zlAAXDLiIT_z4426.png.webp",
+        "https://panovr.autoimg.cn/pano/g6/M04/26/7E/1000x0_autohomecar__Chxkj2E_SHeAMFy9AAXJFv1naxE379.png.webp",
+        "https://panovr.autoimg.cn/pano/g6/M08/2C/B2/1000x0_autohomecar__ChsE12E_SHeAdVU8AAWtHjiZcyY855.png.webp",
+        "https://panovr.autoimg.cn/pano/g6/M0D/2C/B2/1000x0_autohomecar__ChsE12E_SHiATg58AAV553qdYnQ174.png.webp",
+        "https://panovr.autoimg.cn/pano/g6/M0E/2D/B3/1000x0_autohomecar__ChwEmGE_SHiAQ4YkAAUkPjKZJ9Y702.png.webp",
+        "https://panovr.autoimg.cn/pano/g6/M05/2C/B2/1000x0_autohomecar__ChsE12E_SHiAcOH6AATk6WNtVa4807.png.webp",
+        "https://panovr.autoimg.cn/pano/g6/M0A/26/7E/1000x0_autohomecar__Chxkj2E_SHmAGXvoAARx-XLw4ec127.png.webp",
+        "https://panovr.autoimg.cn/pano/g6/M08/26/7E/1000x0_autohomecar__Chxkj2E_SHmALgzXAAPayVUjOjI432.png.webp",
+        "https://panovr.autoimg.cn/pano/g6/M12/2C/B2/1000x0_autohomecar__ChsE12E_SHmAKfYLAANBUEjFZ98622.png.webp",
+        "https://panovr.autoimg.cn/pano/g6/M0F/26/7E/1000x0_autohomecar__Chxkj2E_SHqAFPO1AAPshyf-3co021.png.webp",
+        "https://panovr.autoimg.cn/pano/g6/M00/2D/B3/1000x0_autohomecar__ChwEmGE_SHqAUaUBAARJZ1MIeus473.png.webp",
+        "https://panovr.autoimg.cn/pano/g6/M12/2D/B3/1000x0_autohomecar__ChwEmGE_SHqAfI7NAASVLsEiLa8682.png.webp",
+        "https://panovr.autoimg.cn/pano/g6/M13/26/7E/1000x0_autohomecar__Chxkj2E_SHqAPI10AAT7ea_1DpQ487.png.webp",
+        "https://panovr.autoimg.cn/pano/g6/M15/2D/B3/1000x0_autohomecar__ChwEmGE_SHuAWhtYAAVZowNTZQs494.png.webp",
+        "https://panovr.autoimg.cn/pano/g6/M01/2C/B2/1000x0_autohomecar__ChsE12E_SHyAHHtTAAWinPWDq7E842.png.webp",
+        "https://panovr.autoimg.cn/pano/g6/M03/2D/B3/1000x0_autohomecar__ChwEmGE_SHyAGv-uAAWBFwXl8Gg090.png.webp",
+        "https://panovr.autoimg.cn/pano/g6/M0A/2D/B3/1000x0_autohomecar__ChwEmGE_SHyACUpNAAWsQ32WpbU418.png.webp",
+        "https://panovr.autoimg.cn/pano/g6/M00/2C/B2/1000x0_autohomecar__ChsE12E_SHyAdqWfAAWYsGUxPOE558.png.webp",
+        "https://panovr.autoimg.cn/pano/g6/M0D/2C/B2/1000x0_autohomecar__ChsE12E_SHyAWbNhAAVXmc-H540751.png.webp",
+        "https://panovr.autoimg.cn/pano/g6/M15/26/7E/1000x0_autohomecar__Chxkj2E_SH2AF5vHAAUdJzUC9-c397.png.webp",].reverse()
+
+    /*
+    constructor(id: string,      
+    config: {
+        width: number,            image width
+        height: number,           image height
+        distance: number,          move distance
+        maxThread: number,         max download
+        defaultIndex: number,      index
+    }
+    */
+    // new SYCycleImage(id, config)
+    let imgObj = new SYCycleImage("cycle-image-wrap", { width: 1000, height: 666, maxThread: 6, distance: 1 })
+
+    // updateImages(data) 
+    // data: string[] | string[][]  
+    // [img1,img2,...,img35,...] or [[imgA1,imgA2,...,imgA35,...],[imgB1,imgB2,...,imgB35,...]]   
+    imgObj.updateImages([data])
+    // imgObj.destroy()
+
+
+
+
+
+
+    /*===================================================*/
+
+    var app = new Vue({
+        el: '#app',
+        data: {
+            arr: data,
+            startPoint: 0, // 看图起点
+            distance: 1, // 移动距离
+            curDeg: 0, // 图片序号
+        },
+        methods: {
+            touchstart(e) {
+                // 点击开始
+                this.startPoint = e.touches[0].clientX;
+            },
+            touchmove(e) {
+                // 移动手指
+                var tempPoint = e.touches[0].clientX;
+                if (tempPoint - this.startPoint > this.distance) {
+                    this.drawImg("right");
+                    this.startPoint = tempPoint;
+                } else if (tempPoint - this.startPoint < -this.distance) {
+                    this.drawImg("left");
+                    this.startPoint = tempPoint;
+                }
+            },
+            drawImg(type) {
+                // 修改图片序号
+                if (type == "right") {
+                    if (this.curDeg > 0) {
+                        this.curDeg--;
+                    } else {
+                        this.curDeg = data.length - 1;
+                    }
+                } else if (type == "left") {
+
+                    if (this.curDeg < data.length - 1) {
+                        this.curDeg++;
+                    } else {
+                        this.curDeg = 0;
+                    }
+                }
+            },
+        },
+    })
+</script>
+
+</html>
