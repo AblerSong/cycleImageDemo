@@ -1,13 +1,9 @@
 # cycleImageDemo
-######Usage:
-```
-<div id="cycle-image-wrap"></div>
 
-let imgObj = new SYCycleImage("cycle-image-wrap", { width: 300, height: 200, maxThread: 6, defaultIndex: 5 })
-imgObj.updateImages(imageArray)
-imgObj.destroy()
+### Usage:
+
 ```
-```
+// constructor
 SYCycleImage(id, config)
 /*
     constructor(id: string, config: {
@@ -19,12 +15,21 @@ SYCycleImage(id, config)
     }
 */
 ```
+
 ```
+<div id="cycle-image-wrap"></div>
+
+let imgObj = new SYCycleImage("cycle-image-wrap", { width: 300, height: 200, maxThread: 6, defaultIndex: 5 })
+
+// current index
+imgObj.currentIndex
+
 // imageArray: string[] | string[][]
-// [img1,img2,...,img35,...] or [[imgA1,imgA2,...,imgA35,...],[imgB1,imgB2,...,imgB35,...]]   
-updateImages(imageArray)
+// [img1,img2,...,img35,...] or [[imgA1,imgA2,...,imgA35,...],[imgB1,imgB2,...,imgB35,...]]
+imgObj.updateImages(imageArray)
+
+// release
+imgObj.destroy()
 ```
-```
-destroy()
-```
-![](./demo.gif)
+
+![demo](./demo.gif)
